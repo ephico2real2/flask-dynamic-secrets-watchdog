@@ -44,6 +44,11 @@ echo "<!DOCTYPE html>
 
 # Provide feedback that the script has finished
 echo "Flask application structure initialized in $PROJECT_DIR"
+
+# List the contents of the project directory
+echo "Project directory structure:"
+tree ../$PROJECT_DIR
+
 ```
 
 ### Instructions to Use the Script
