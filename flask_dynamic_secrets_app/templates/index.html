@@ -1,13 +1,16 @@
+<!-- templates/index.html -->
 <!DOCTYPE html>
-<html lang='en'>
+<html lang="en">
 <head>
-    <meta charset='UTF-8'>
+    <meta charset="UTF-8">
     <title>Quotes</title>
 </head>
 <body>
     <h1>Quotes</h1>
     <ul>
-        <!-- Quotes will be inserted here -->
+        {% for quote, author in quotes %}
+            <li>"{{ quote }}" - {{ author }}</li>
+        {% endfor %}
     </ul>
 </body>
 </html>
