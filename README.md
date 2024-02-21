@@ -1,5 +1,7 @@
 ### Bash Script for Initializing Project Structure
 
+# flask-dynamic-secrets-watchdog
+
 Save the following script as `init_flask_app.sh`:
 
 ```bash
@@ -63,7 +65,4 @@ This script will create the `flask_dynamic_secrets_app` directory with the speci
 ### Customizing the Script
 
 - You can modify the script to include initial boilerplate code in `flask_secrets_watchdog.py`, `config.py`, `app.py`, and `secrets_loader.py` by adding `echo` commands similar to how `requirements.txt` and `index.html` are populated.
-- For more complex projects or different languages, you can adapt this approach to scaffold out your project's initial structure, making project initialization more efficient.
 
-This script provides a straightforward way to quickly set up your Flask project structure, allowing you to focus on developing the application's functionality.
-# flask-dynamic-secrets-watchdog
