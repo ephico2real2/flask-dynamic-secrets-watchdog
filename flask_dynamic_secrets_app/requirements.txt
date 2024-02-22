@@ -1,5 +1,6 @@
 Flask==3.0.2
-Werkzeug>=2.0.0
-mysql-connector-python==8.0.23
-watchdog==2.1.2
+requests
+Werkzeug>=3.0.0
+mysql-connector-python==8.3.0
+watchdog
 
