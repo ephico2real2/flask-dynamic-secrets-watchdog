@@ -1,4 +1,3 @@
-<!-- templates/index.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -12,5 +11,47 @@
             <li>"{{ quote }}" - {{ author }}</li>
         {% endfor %}
     </ul>
+
+    <!-- Button to delete duplicates -->
+    <button onclick="deleteDuplicates()">Delete Duplicates</button>
+    <!-- Button to show duplicates -->
+    <button onclick="showDuplicates()">Show Duplicates</button>
+
+    <script>
+    function deleteDuplicates() {
+        fetch('/api/quotes/duplicates/delete', {
+            method: 'POST',
+        })
+        .then(response => response.json())
+        .then(data => {
+            alert(data.message); // Display a simple alert with the response message
+            window.location.reload(); // Reload the page to update the list of quotes
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while deleting duplicates.'); // Display an error alert if something goes wrong
+        });
+    }
+
+    function showDuplicates() {
+        fetch('/api/quotes/duplicates')
+        .then(response => response.json())
+        .then(duplicates => {
+            if (duplicates.length > 0) {
+                let message = "Duplicate quotes:\n";
+                duplicates.forEach(dup => {
+                    message += `Quote: "${dup.quote}" - Count: ${dup.count}\n`;
+                });
+                alert(message);
+            } else {
+                alert("No duplicate quotes found.");
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while fetching duplicates.'); // Display an error alert if something goes wrong
+        });
+    }
+    </script>
 </body>
 </html>
