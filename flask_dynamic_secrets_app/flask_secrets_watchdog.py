@@ -1,5 +1,6 @@
 # flask_secrets_watchdog.py
 import os
+import sys
 import time
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
