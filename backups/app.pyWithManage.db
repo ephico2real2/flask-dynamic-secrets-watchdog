@@ -42,6 +42,7 @@ def quotes_api():
         quote = data['content']
         author = data['author']
 
+        # Connect to the database
         db_config = {
             'host': app.config['DATABASE_HOST'],
             'user': app.config['DATABASE_USER'],
@@ -51,15 +52,12 @@ def quotes_api():
         connection = mysql.connector.connect(**db_config)
         cursor = connection.cursor()
 
-        # Check if the quote already exists
-        select_query = "SELECT COUNT(*) FROM quotes WHERE quote = %s"
-        cursor.execute(select_query, (quote,))
-        if cursor.fetchone()[0] == 0:
-            # The quote doesn't exist, insert it into the database
-            insert_query = "INSERT INTO quotes (quote, author) VALUES (%s, %s)"
-            cursor.execute(insert_query, (quote, author))
-            connection.commit()
+        # Insert the fetched quote into the database
+        insert_query = "INSERT INTO quotes (quote, author) VALUES (%s, %s)"
+        cursor.execute(insert_query, (quote, author))
+        connection.commit()
 
+        # Close the connection
         cursor.close()
         connection.close()
 
@@ -68,63 +66,6 @@ def quotes_api():
         return jsonify({'error': str(e)}), 500
     except mysql.connector.Error as err:
         return jsonify({'error': 'Database error: ' + str(err)}), 500
-
-
-@app.route('/api/quotes/duplicates')
-def show_duplicates():
-    db_config = {
-        'host': app.config['DATABASE_HOST'],
-        'user': app.config['DATABASE_USER'],
-        'password': app.config['DATABASE_PASSWORD'],
-        'database': app.config['DATABASE_NAME'],
-    }
-    connection = mysql.connector.connect(**db_config)
-    cursor = connection.cursor()
-
-    # Find duplicates
-    cursor.execute("""
-        SELECT quote, COUNT(quote) as cnt
-        FROM quotes
-        GROUP BY quote
-        HAVING cnt > 1
-    """)
-    duplicates = cursor.fetchall()
-
-    cursor.close()
-    connection.close()
-
-    return jsonify([{'quote': quote, 'count': count} for quote, count in duplicates])
-
-@app.route('/api/quotes/duplicates/delete', methods=['POST'])
-def delete_duplicates():
-    db_config = {
-        'host': app.config['DATABASE_HOST'],
-        'user': app.config['DATABASE_USER'],
-        'password': app.config['DATABASE_PASSWORD'],
-        'database': app.config['DATABASE_NAME'],
-    }
-    connection = mysql.connector.connect(**db_config)
-    cursor = connection.cursor()
-
-    # Delete duplicates, keeping the quote with the lowest id
-    cursor.execute("""
-        DELETE q1 FROM quotes q1
-        INNER JOIN quotes q2 
-        WHERE 
-            q1.id > q2.id AND 
-            q1.quote = q2.quote
-    """)
-    connection.commit()
-
-    affected_rows = cursor.rowcount
-
-    cursor.close()
-    connection.close()
-
-    return jsonify({'message': f'Deleted {affected_rows} duplicate quotes'})
-
-
-
 
 if __name__ == "__main__":
     app.run(debug=True, port=3000)
