@@ -3,21 +3,93 @@
 <head>
     <meta charset="UTF-8">
     <title>Quotes</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th {
+            background-color: #4CAF50; /* Green background for headers */
+            color: white;
+        }
+        td, th {
+            border: 1px solid #ddd;
+            padding: 8px;
+        }
+        tr:nth-child(even) {
+            background-color: #f2f2f2; /* Light gray background for even rows */
+        }
+        tr:hover {
+            background-color: #ddd; /* Slightly darker gray for hover effect */
+        }
+        button {
+            background-color: #4CAF50; /* Matching green background for buttons */
+            color: white;
+            padding: 10px 20px;
+            margin: 10px 0;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049; /* Darker green for button hover effect */
+        }
+    </style>
 </head>
 <body>
     <h1>Quotes</h1>
-    <ul>
-        {% for quote, author in quotes %}
-            <li>"{{ quote }}" - {{ author }}</li>
-        {% endfor %}
-    </ul>
 
-    <!-- Button to delete duplicates -->
-    <button onclick="deleteDuplicates()">Delete Duplicates</button>
+    <table>
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Quote</th>
+                <th>Author</th>
+            </tr>
+        </thead>
+        <tbody id="quotesBody">
+            {% for quote, author in quotes %}
+                <tr>
+                    <td>{{ loop.index }}</td> <!-- Display the loop index as the quote number -->
+                    <td>{{ quote }}</td>
+                    <td>{{ author }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+     <!-- Button to fetch a new quote -->
+     <button onclick="fetchNewQuote()">New Quote</button>  
+
     <!-- Button to show duplicates -->
     <button onclick="showDuplicates()">Show Duplicates</button>
 
+    <!-- Button to delete duplicates -->
+    <button onclick="deleteDuplicates()">Delete Duplicates</button>
+
+
     <script>
+
+    function fetchNewQuote() {
+        fetch('/api/quotes')
+        .then(response => response.json())
+        .then(data => {
+            const quotesBody = document.getElementById('quotesBody');
+
+            // Add the new quote at the end of the table
+            const newRow = quotesBody.insertRow(-1); // Inserts a row at the end
+            newRow.insertCell(0).innerHTML = quotesBody.rows.length + 1; // Adjust the quote number
+            newRow.insertCell(1).innerHTML = data.quote; // Add the new quote text
+            newRow.insertCell(2).innerHTML = data.author; // Add the new quote author
+        })
+        .catch(error => {
+            console.error('Error fetching new quote:', error);
+            alert('Failed to fetch new quote. Please try again.');
+        });
+    }
+    
     function deleteDuplicates() {
         fetch('/api/quotes/duplicates/delete', {
             method: 'POST',
