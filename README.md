@@ -71,3 +71,9 @@ This script will create the `flask_dynamic_secrets_app` directory with the speci
 
 - You can modify the script to include initial boilerplate code in `flask_secrets_watchdog.py`, `config.py`, `app.py`, and `secrets_loader.py` by adding `echo` commands similar to how `requirements.txt` and `index.html` are populated.
 
+
+```
+chmod +x run-flask.sh
+```
+
+
