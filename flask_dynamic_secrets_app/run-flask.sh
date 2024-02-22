@@ -14,7 +14,8 @@ cleanup() {
 trap cleanup SIGINT SIGTERM
 
 # Define the paths to your secrets directories as an environment variable
-export SECRETS_DIRS="/Users/olasumbo/Downloads/repo/myqsl/local_secrets"
+#export SECRETS_DIRS="./secrets"
+export SECRETS_DIRS="${SECRETS_DIRS}"
 
 echo "Starting Flask secrets watchdog..."
 python flask_secrets_watchdog.py &

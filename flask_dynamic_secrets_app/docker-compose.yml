@@ -1,0 +1,37 @@
+version: '3.8'
+services:
+  db:
+    image: mysql:8.0
+    cap_add:
+      - SYS_NICE
+    restart: always
+    environment:
+      - MYSQL_DATABASE=quotes
+      - MYSQL_ROOT_PASSWORD=london123
+    ports:
+      - '13306:3306'
+    volumes:
+      - db:/var/lib/mysql
+      - ./db/quotes-init.sql:/docker-entrypoint-initdb.d/init.sql
+
+  app:
+    build: .
+    ports:
+      - '13000:3000'
+    environment:
+      - FLASK_APP=app.py
+      - FLASK_RUN_HOST=0.0.0.0
+      - FLASK_RUN_PORT=3000
+      # Path inside the container where the secrets directory is mounted
+      - SECRETS_DIRS=/usr/src/app/secrets
+    volumes:
+      - .:/usr/src/app
+      # Mount the local secrets directory to the specified path inside the container
+      - ./secrets:/usr/src/app/secrets
+    depends_on:
+      - db
+    restart: on-failure
+
+volumes:
+  db:
+    driver: local

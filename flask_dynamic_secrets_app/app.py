@@ -4,9 +4,15 @@ from flask import Flask, render_template, jsonify, redirect, url_for
 import requests
 import mysql.connector
 from config import Config
+# Import the initialize_database function
+from managedb import initialize_database
 
 app = Flask(__name__)
 app.config.from_object(Config)
+
+# Initialize the database with the app's config
+with app.app_context():
+    initialize_database(app)
 
 @app.route('/')
 def index():
