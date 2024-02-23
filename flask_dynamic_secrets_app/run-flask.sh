@@ -20,8 +20,12 @@ echo "Starting Flask secrets watchdog..."
 python flask_secrets_watchdog.py &
 
 echo "Starting Flask application with Gunicorn..."
+
 # Adjust the number of workers, threads, and port as necessary
-gunicorn --log-level info --bind :3000 app:app &
+gunicorn --log-level info --config ./gunicorn_config.py app:app &
+
+#gunicorn --log-level info --bind 0.0.0.0:3000 app:app --timeout 600 &
+
 
 # Wait for any process to exit
 wait

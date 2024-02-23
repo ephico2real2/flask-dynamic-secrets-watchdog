@@ -1,5 +1,6 @@
 ### Bash Script for Initializing Project Structure
 
+### DO NOT RUN AGAIN ###  CODE NOW EXISTS
 # flask-dynamic-secrets-watchdog
 
 Save the following script as `init_flask_app.sh`:

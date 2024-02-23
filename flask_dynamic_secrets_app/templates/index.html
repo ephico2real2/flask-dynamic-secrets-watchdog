@@ -36,6 +36,25 @@
         button:hover {
             background-color: #45a049; /* Darker green for button hover effect */
         }
+        /* Styles for the Delete Duplicates button */
+        #deleteDuplicatesButton {
+            background-color: #d9534f; /* Red background for the Delete Duplicates button */
+        }
+        #deleteDuplicatesButton:hover {
+            background-color: #c9302c; /* Darker red for hover effect */
+        }
+        #showDuplicatesButton {
+            background-color: #f0ad4e; /* Yellow */
+        }
+        #showDuplicatesButton:hover {
+            background-color: #ec971f; /* Darker yellow */
+        }
+        #refreshButton {
+            background-color: #337ab7; /* Blue */
+        }
+        #refreshButton:hover {
+            background-color: #286090; /* Darker blue */
+        }
     </style>
 </head>
 <body>
@@ -64,14 +83,24 @@
      <button onclick="fetchNewQuote()">New Quote</button>  
 
     <!-- Button to show duplicates -->
-    <button onclick="showDuplicates()">Show Duplicates</button>
+    <!-- <button onclick="showDuplicates()">Show Duplicates</button> -->
 
     <!-- Button to delete duplicates -->
-    <button onclick="deleteDuplicates()">Delete Duplicates</button>
+    <!-- <button onclick="deleteDuplicates()">Delete Duplicates</button> -->
 
+    <!-- Delete Duplicates button with red color -->
+    <button id="deleteDuplicatesButton" onclick="deleteDuplicates()">Delete Duplicates</button>
+
+    <!-- Delete ShowDuplicates button with yellow color -->
+    <button id="showDuplicatesButton" onclick="showDuplicates()">Show Duplicates</button>
+
+    <!-- Refresh button with color blue -->
+    <button id="refreshButton" onclick="refreshPage()">Refresh</button>   
+
+    <!-- Refresh button -->
+    <!-- <button onclick="refreshPage()">Refresh</button> -->  
 
     <script>
-
     function fetchNewQuote() {
         fetch('/api/quotes')
         .then(response => response.json())
@@ -124,6 +153,10 @@
             alert('An error occurred while fetching duplicates.'); // Display an error alert if something goes wrong
         });
     }
+
+    function refreshPage() {
+            window.location.reload(); // Refreshes the current page
+        }
     </script>
 </body>
 </html>
