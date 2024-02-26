@@ -80,14 +80,11 @@ $env:FLASK_APP = "app.py"
 
 Now, run the Flask application:
 
-```bash
-flask run --port=3000
-```
 
-Alternatively, if you're using Gunicorn as your WSGI HTTP server:
+Alternatively, if you're using Gunicorn as your WSGI HTTP server: Then execute the "run-flask.sh" scripts as shown below:
 
 ```bash
-gunicorn --workers=3 --bind=0.0.0.0:3000 app:app
+./run-flask.sh
 ```
 
 #### Step 6: Access the Application
@@ -97,6 +94,3 @@ Open your web browser and navigate to `http://localhost:3000` to access the Flas
 ### Running with Docker (Optional)
 
 If you prefer running the application within a Docker container, ensure Docker and Docker Compose are installed on your machine. Adjust the `docker-compose.yml` file as necessary to fit your setup, especially the secrets volume mount and environment variables.
-
-
-
