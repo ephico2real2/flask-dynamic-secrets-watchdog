@@ -4,11 +4,6 @@ import sys
 import time
 import mysql.connector
 from mysql.connector import Error
-import logging
-
-# Configure logging for the module
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-logger = logging.getLogger(__name__)
 
 def get_db_config(app):
     """Retrieve database configuration from the Flask app's configuration."""
@@ -28,10 +23,10 @@ def initialize_database(app):
 
     for attempt in range(max_retries):
         try:
-            logger.info(f"Attempting to connect to the database. Attempt {attempt + 1} of {max_retries}")
+            print(f"Attempting to connect to the database. Attempt {attempt + 1} of {max_retries}")
             cnx = mysql.connector.connect(**db_config)
             cursor = cnx.cursor()
-            logger.info("Database connection successful.")
+            print("Database connection successful.")
             connected = True
             
             # Path to your SQL script
@@ -46,30 +41,28 @@ def initialize_database(app):
                         cursor.execute(statement)
                         cnx.commit()
                     except mysql.connector.Error as err:
-                        logger.error(f"Failed executing statement:\n{statement}\nError: {err}")
+                        print(f"Failed executing statement:\n{statement}\nError: {err}")
             
             cursor.close()
             cnx.close()
             break  # Exit loop after successful execution
         except Error as err:
-            logger.error(f"Connection attempt failed: {err}")
+            print(f"Connection attempt failed: {err}")
             time.sleep(wait_seconds)
 
     if not connected:
-        logger.error("Failed to connect to the database after several attempts.")
+        print("Failed to connect to the database after several attempts.")
         sys.exit(1)
 
 def reconfigure_database(app):
     """Reconfigure the database connection dynamically when secrets change."""
-    logger.info("Reconfiguring database connection with new settings...")
+    print("Reconfiguring database connection with new settings...")
     db_config = get_db_config(app)
     
     try:
         cnx = mysql.connector.connect(**db_config)
-        logger.info("Database reconfiguration successful. Connection established.")
+        print("Database reconfiguration successful. Connection established.")
         cnx.close()
     except Error as err:
-        logger.error(f"Failed to reconfigure database: {err}")
-        # Here you might decide to exit the application or handle the error differently.
-        # Exiting the application might not be the best approach in a production environment.
-        # Consider logging the error and possibly retrying the connection later.
+        print(f"Failed to reconfigure database: {err}")
+        # Consider whether to exit or take additional action here

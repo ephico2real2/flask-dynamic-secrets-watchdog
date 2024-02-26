@@ -74,3 +74,55 @@ docker-compose down
 ```
 
 This command stops all services, removes the containers, and networks created by `docker-compose up`.
+
+## Interacting with the Flask Application Endpoints
+
+This document explains how to access and interact with the metrics and health check endpoints of our Flask application, as well as how to invoke the API to delete duplicate quotes.
+
+### Accessing Metrics
+
+The `/metrics` endpoint exposes various metrics of the Flask application, suitable for scraping by Prometheus.
+
+#### Using a Browser
+To view the metrics, navigate to:
+```
+http://localhost:3000/metrics
+```
+
+#### Using Curl
+To fetch the metrics using `curl`:
+```sh
+curl http://localhost:3000/metrics
+```
+
+### Checking Application Health
+
+The `/health` endpoint provides information about the health of the application and its connection to the database.
+
+#### Using a Browser
+To check the application health, navigate to:
+```
+http://localhost:3000/health
+```
+
+#### Using Curl
+To fetch the health status using `curl`:
+```sh
+curl http://localhost:3000/health
+```
+
+### Deleting Duplicate Quotes
+
+The application provides an API endpoint to delete duplicate quotes from the database. This can help clean up any redundant entries.
+
+#### Using Curl
+To invoke the API to delete duplicate quotes, use the following `curl` command:
+```sh
+curl -X POST http://localhost:3000/api/quotes/duplicates/delete
+```
+
+This command sends a POST request to the endpoint responsible for deleting duplicate quotes. On successful deletion, the API will return a message indicating the number of quotes deleted and instruct the client to reload the page if necessary.
+
+### Notes
+- The `/metrics` and `/health` endpoints are meant for monitoring and health-checking purposes and provide valuable insights into the application's performance and status.
+- The delete duplicates API (`/api/quotes/duplicates/delete`) is a utility endpoint to help maintain the integrity of the data in the application. It's a POST request to ensure deliberate invocation.
