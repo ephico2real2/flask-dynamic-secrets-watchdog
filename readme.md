@@ -1,96 +1,88 @@
-Creating a README for running the Flask app locally with Python virtual environment and populating secrets:
+---
 
-### Setting Up and Running Locally
+# Flask Dynamic Secrets App README
 
-#### Prerequisites
+## Overview
 
-- Python 3.8+
-- pip
-- virtualenv (optional but recommended)
+This Flask application demonstrates dynamic secret loading and automatic configuration reloads, designed for environments where secrets are rotated frequently. It can reload its configuration in response to changes in secrets without requiring a restart, ensuring minimal downtime and enhanced security.
 
-#### Step 1: Clone Repository
+## Components
 
-Clone the repository to your local machine and navigate into the project directory:
+### app.py
 
-```bash
-git clone https://github.com/ephico2real2/flask-dynamic-secrets-watchdog.git
-cd flask-dynamic-secrets-watchdog && ls -al
-cd ./flask_dynamic_secrets_app
-```
+- **Description**: This is the main Flask application file. It defines web routes, views, and logic for handling web requests and responses. It serves as the entry point for running the Flask web server.
+- **Related Components**: Interacts with `config.py` for application settings, `secrets_loader.py` for loading secrets, and `managedb.py` for database connection management.
 
-#### Step 2: Create Python Virtual Environment
+### config.py
 
-It's recommended to use a virtual environment for Python projects to manage dependencies efficiently.
+- **Description**: Contains configuration settings for the Flask application. It imports settings such as database credentials and secret keys from `secrets_loader.py`, configuring the Flask app settings dynamically.
+- **Related Components**: Utilizes `secrets_loader.py` to load secret values into the application's configuration.
 
-```bash
-python3 -m venv venv
-```
+### secrets_loader.py
 
-Activate the virtual environment:
+- **Description**: Responsible for loading secret values (e.g., database credentials) from specified directories. It is utilized by `config.py` to inject these secrets into the application's configuration dynamically.
+- **Related Components**: Used by `config.py` and indirectly affects `app.py` and `managedb.py` through configuration.
 
-- On Windows:
-  ```bash
-  .\venv\Scripts\activate
-  ```
-- On macOS and Linux:
-  ```bash
-  source venv/bin/activate
-  ```
+### managedb.py
 
-#### Step 3: Install Dependencies
+- **Description**: Contains functions for initializing and reconfiguring the database connection based on loaded secrets. It includes `initialize_database` for setting up the database schema at startup and `reconfigure_database` for dynamically updating database connection settings if secrets change.
+- **Related Components**: Called by `app.py` to manage database connections and affected by `secrets_loader.py` through dynamic secret loading.
 
-Install the required Python packages from the `requirements.txt` file:
+### flask_secrets_watchdog.py
 
-```bash
-pip install -r requirements.txt
-```
+- **Description**: Implements a watchdog listener that monitors changes to the secrets files. Upon detecting changes, it triggers reloading configurations or reinitializing database connections. It collaborates with `secrets_loader.py` to reload secrets and `managedb.py` for any database reconfiguration needs.
+- **Related Components**: Works alongside `app.py` as a separate process, utilizing `secrets_loader.py` for secret reloading and `managedb.py` for database reconfigurations.
 
-#### Step 4: Create Secrets Directory
+### run-flask.sh
 
-Create a `./secrets` directory at the project root and populate it with your MySQL secrets:
+- **Description**: A script to start the Flask application and the secrets watchdog simultaneously. It ensures that the application is always running with the latest configuration and secrets by monitoring for changes and triggering reloads as necessary.
+- **Related Components**: It is the bootstrap script that integrates `flask_secrets_watchdog.py` with the Flask application, ensuring that the dynamic reloading mechanism is always active.
+
+## Component Interaction Diagram
 
 ```bash
-mkdir -p ./secrets
-echo "db" > ./secrets/MYSQL_HOSTNAME
-echo "root" > ./secrets/MYSQL_USERNAME
-echo "london123" > ./secrets/MYSQL_PASSWORD
-echo "quotes" > ./secrets/MYSQL_DB
-echo "3306" > ./secrets/MYSQL_PORT
+                                                        +----------------------+
+                                                        |      run-flask.sh    |
+                                                        +----------+-----------+
+                                                                    |
+                                                                    v
+                                                        +----------+-----------+
+                                    +-----------------+  Flask Application   +-----------------+
+                                    |                 +----------+-----------+                 |
+                                    |                            |                               |
+                                    |                            |                               |
+                                    v                            v                               v
+                        +--------------+-------+       +------------+------------+       +---------+---------+
+                        | secrets_loader.py   |       | flask_secrets_watchdog.py|       |   config.py        |
+                        +--------------+-------+       +------------+------------+       +---------+---------+
+                                    |                            |                               |
+                                    |                            |                               |
+                                    v                            v                               v
+                            +--------+--------+       +-----------+-----------+         +--------+--------+
+                            |   Secrets       |       |  Watch for changes in |         | Load secrets and |
+                            | Directory/File  |       |  secrets directory    |         | update app config|
+                            +-----------------+       +-----------+-----------+         +------------------+
+                                                                    |
+                                                                    |
+                                                                    v
+                                                        +-----------+-----------+
+                                                        |   on_secrets_changed() |
+                                                        |   function in Flask    |
+                                                        |   app triggers reload  |
+                                                        +-----------+-----------+
+                                                                    |
+                                                                    v
+                                                        +-----------+-----------+
+                                                        | Reload Flask app's    |
+                                                        | configuration and     |
+                                                        | re-establish database |
+                                                        | connection            |
+                                                        +-----------------------+
+
 ```
 
-#### Step 5: Run the Flask Application
+## Getting Started
 
-Before running the application, make sure to set the `FLASK_APP` environment variable:
+Refer to the initial README sections for detailed setup instructions, including local development setup, Docker Compose usage, accessing the application, health checks, and metrics.
 
-```bash
-export FLASK_APP=app.py
-```
-
-For Windows CMD, use:
-
-```cmd
-set FLASK_APP=app.py
-```
-
-For Windows PowerShell, use:
-
-```powershell
-$env:FLASK_APP = "app.py"
-```
-
-Now, run the Flask application:
-
-
-Alternatively, if you're using Gunicorn as your WSGI HTTP server: Then execute the "run-flask.sh" scripts as shown below:
-
-```bash
-./run-flask.sh
-```
-
-#### Step 6: Access the Application
-
-Open your web browser and navigate to `http://localhost:3000` to access the Flask application. 
-
-### Running with Docker (Optional)
-
-If you prefer running the application within a Docker container, ensure Docker and Docker Compose are installed on your machine. Adjust the `docker-compose.yml` file as necessary to fit your setup, especially the secrets volume mount and environment variables.
+---
