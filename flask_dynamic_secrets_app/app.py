@@ -180,20 +180,28 @@ def show_duplicates():
     return jsonify([{'quote': quote, 'count': count} for quote, count in duplicates])
 
 @app.route('/api/quotes/duplicates/delete', methods=['POST'])
-def delete_duplicates():
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute("""
-        DELETE q1 FROM quotes q1
-        INNER JOIN quotes q2 
-        WHERE q1.id > q2.id AND q1.quote = q2.quote
-    """)
-    affected_rows = cursor.rowcount
-    conn.commit()
+def delete_duplicate_quotes():
+    connection = get_db_connection()  # Assuming you have a function to get your DB connection
+    cursor = connection.cursor()
+    # SQL query to identify duplicates and delete them, keeping only the earliest entry
+    delete_query = """
+    DELETE q1 FROM quotes q1
+    INNER JOIN (
+        SELECT MIN(id) as id, quote
+        FROM quotes
+        GROUP BY quote
+        HAVING COUNT(quote) > 1
+    ) q2 ON q1.quote = q2.quote AND q1.id != q2.id;
+    """
+    cursor.execute(delete_query)
+    affected_rows = cursor.rowcount  # Number of rows affected by the delete operation
+    connection.commit()
     cursor.close()
-    conn.close()
-    #return jsonify({'message': f'Deleted {affected_rows} duplicate quotes'})
-    return jsonify({'success': True, 'reload': True})
+    connection.close()
+    return jsonify({
+        "message": f"Deleted {affected_rows} duplicate quotes",
+        "reload": True  # Instruct the client to reload the page
+    })
 
 if __name__ == "__main__":
     # Start up the server to expose the metrics.
