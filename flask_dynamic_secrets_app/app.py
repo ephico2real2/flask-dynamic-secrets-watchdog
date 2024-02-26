@@ -11,7 +11,8 @@ from prometheus_client import Counter, Gauge, Histogram, Summary, start_http_ser
 import psutil  # For accessing system details, including CPU usage
 from config import Config
 from managedb import initialize_database, reconfigure_database
-from apscheduler.schedulers.background import BackgroundScheduler
+from flask import current_app
+from contextlib import contextmanager
 
 
 # Initialize Flask app
@@ -23,7 +24,7 @@ start_http_server(8000)
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-logger = logging.getLogger("RequestLogger")
+logger = logging.getLogger(__name__)
 
 # Prometheus metrics
 # HTTP request counter
@@ -41,27 +42,22 @@ context_switches = Gauge('system_context_switches_total', 'Total number of conte
 request_latency = Histogram('http_request_latency_seconds', 'HTTP request latency in seconds')
 response_size = Summary('http_response_size_bytes', 'HTTP response size in bytes')
 
+@contextmanager
+def app_context():
+    with app.app_context():
+        yield
+
 def update_system_metrics():
     """Update system-related metrics, including memory and CPU usage."""
-    memory_usage.set(psutil.virtual_memory().used)
-    cpu_usage.set(psutil.cpu_percent())
+    with app_context():
+        memory_usage.set(psutil.virtual_memory().used)
+        cpu_usage.set(psutil.cpu_percent())
 
 def update_threading_metrics():
     """Update threading-related metrics."""
-    thread_count.set(psutil.Process().num_threads())
-    context_switches.set(psutil.cpu_stats().ctx_switches)
-
-# Initialize APScheduler
-scheduler = BackgroundScheduler(daemon=True)
-scheduler.add_job(update_system_metrics, 'interval', seconds=1860)
-scheduler.add_job(update_threading_metrics, 'interval', seconds=1860)
-
-# Start the scheduler
-scheduler.start()
-
-# Use atexit to ensure that the scheduler is cleanly shut down when the Flask app exits
-import atexit
-atexit.register(lambda: scheduler.shutdown())
+    with app_context():
+        thread_count.set(psutil.Process().num_threads())
+        context_switches.set(psutil.cpu_stats().ctx_switches)
 
 @app.before_request
 def before_request_func():
@@ -92,8 +88,6 @@ def proxy_metrics():
     # Return the response content and content type to the client
     return Response(response.content, content_type=response.headers['Content-Type'])
 
-
-
 @app.route('/reload-config', methods=['POST'])
 def reload_config():
     # Implement security checks here...
@@ -115,6 +109,27 @@ def get_db_connection():
     except Error as e:
         logger.error(f"Error connecting to the database: {e}")
         sys.exit(1)
+
+@app.route('/health')
+def health_check():
+    health_status = {'app': {'status': 'running', 'message': 'Application is up and running.'}}
+
+    try:
+        with get_db_connection() as conn:
+            with conn.cursor() as cursor:
+                cursor.execute("SELECT 1")
+                cursor.fetchall()
+            health_status['database'] = {'status': 'connected', 'message': 'Database connection successful.'}
+    except Exception as e:
+        logger.exception("Failed to connect to the database during health check")  # Log exception with traceback
+        health_status['database'] = {'status': 'error', 'message': f'Database connection failed: {e}'}
+
+    health_status['overall'] = 'healthy' if health_status.get('database', {}).get('status') == 'connected' else 'unhealthy'
+    overall_status = 200 if health_status['overall'] == 'healthy' else 500
+
+    return jsonify(health_status), overall_status
+
+
 
 @app.route('/')
 def index():
