@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Quotes</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th {
+            background-color: #4CAF50; /* Green background for headers */
+            color: white;
+        }
+        td, th {
+            border: 1px solid #ddd;
+            padding: 8px;
+        }
+        tr:nth-child(even) {
+            background-color: #f2f2f2; /* Light gray background for even rows */
+        }
+        tr:hover {
+            background-color: #ddd; /* Slightly darker gray for hover effect */
+        }
+        button {
+            background-color: #4CAF50; /* Matching green background for buttons */
+            color: white;
+            padding: 10px 20px;
+            margin: 10px 0;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049; /* Darker green for button hover effect */
+        }
+        /* Styles for the Delete Duplicates button */
+        #deleteDuplicatesButton {
+            background-color: #d9534f; /* Red background for the Delete Duplicates button */
+        }
+        #deleteDuplicatesButton:hover {
+            background-color: #c9302c; /* Darker red for hover effect */
+        }
+        #showDuplicatesButton {
+            background-color: #f0ad4e; /* Yellow */
+        }
+        #showDuplicatesButton:hover {
+            background-color: #ec971f; /* Darker yellow */
+        }
+        #refreshButton {
+            background-color: #337ab7; /* Blue */
+        }
+        #refreshButton:hover {
+            background-color: #286090; /* Darker blue */
+        }
+    </style>
+</head>
+<body>
+    <h1>Quotes</h1>
+
+    <table>
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Quote</th>
+                <th>Author</th>
+            </tr>
+        </thead>
+        <tbody id="quotesBody">
+            {% for quote, author in quotes %}
+                <tr>
+                    <td>{{ loop.index }}</td> <!-- Display the loop index as the quote number -->
+                    <td>{{ quote }}</td>
+                    <td>{{ author }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+     <!-- Button to fetch a new quote -->
+     <button onclick="fetchNewQuote()">New Quote</button>  
+
+    <!-- Button to show duplicates -->
+    <!-- <button onclick="showDuplicates()">Show Duplicates</button> -->
+
+    <!-- Button to delete duplicates -->
+    <!-- <button onclick="deleteDuplicates()">Delete Duplicates</button> -->
+
+    <!-- Delete ShowDuplicates button with yellow color -->
+    <button id="showDuplicatesButton" onclick="showDuplicates()">Show Duplicates</button>
+
+    <!-- Delete Duplicates button with red color -->
+    <button id="deleteDuplicatesButton" onclick="deleteDuplicates()">Delete Duplicates</button>
+
+    <!-- Refresh button with color blue -->
+    <button id="refreshButton" onclick="refreshPage()">Refresh</button>   
+
+    <!-- Refresh button -->
+    <!-- <button onclick="refreshPage()">Refresh</button> -->  
+
+    <script>
+    function fetchNewQuote() {
+        fetch('/api/quotes')
+        .then(response => response.json())
+        .then(data => {
+            const quotesBody = document.getElementById('quotesBody');
+
+            // Add the new quote at the end of the table
+            const newRow = quotesBody.insertRow(-1); // Inserts a row at the end
+            newRow.insertCell(0).innerHTML = quotesBody.rows.length + 1; // Adjust the quote number
+            newRow.insertCell(1).innerHTML = data.quote; // Add the new quote text
+            newRow.insertCell(2).innerHTML = data.author; // Add the new quote author
+        })
+        .catch(error => {
+            console.error('Error fetching new quote:', error);
+            alert('Failed to fetch new quote. Please try again.');
+        });
+    }
+
+    function showDuplicates() {
+        fetch('/api/quotes/duplicates')
+        .then(response => response.json())
+        .then(duplicates => {
+            if (duplicates.length > 0) {
+                let message = "Duplicate quotes:\n";
+                duplicates.forEach(dup => {
+                    message += `Quote: "${dup.quote}" - Count: ${dup.count}\n`;
+                });
+                alert(message);
+            } else {
+                alert("No duplicate quotes found.");
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while fetching duplicates.'); // Display an error alert if something goes wrong
+        });
+    }
+
+    window.onload = function() {
+    updateQuotesTable(); // Call this on page load to ensure table is always up to date.
+    // Scroll to the bottom of the page after it loads
+    window.scrollTo(0, document.body.scrollHeight);
+};
+
+function deleteDuplicates() {
+    console.log("Sending request to delete duplicates");
+    fetch('/api/quotes/duplicates/delete', {
+        method: 'POST',
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log("Response received", data);
+        alert(data.message); // Display the alert message
+        updateQuotesTable(); // Update the table without full page reload
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred while deleting duplicates.');
+    });
+}
+
+function updateQuotesTable() {
+    fetch('/api/quotes/list') // This endpoint must exist and return the updated list of quotes
+        .then(response => response.json())
+        .then(data => {
+            const quotesTableBody = document.getElementById('quotesTableBody');
+            quotesTableBody.innerHTML = ''; // Clear the table body to populate it with updated data
+
+            data.forEach((quote, index) => {
+                const row = quotesTableBody.insertRow(-1);
+                const numberCell = row.insertCell(0);
+                const quoteCell = row.insertCell(1);
+                const authorCell = row.insertCell(2);
+
+                numberCell.textContent = index + 1;
+                quoteCell.textContent = quote.text;
+                authorCell.textContent = quote.author;
+            });
+
+            // Optionally, scroll to the bottom of the table or another specific element
+            window.scrollTo(0, document.body.scrollHeight);
+        })
+        .catch(error => console.error('Failed to update quotes table:', error));
+}
+
+// Function to refresh the page
+function refreshPage() {
+    console.log("Refreshing the page");
+    window.location.reload(); // Refreshes the current page
+}
+    </script>
+</body>
+</html>
