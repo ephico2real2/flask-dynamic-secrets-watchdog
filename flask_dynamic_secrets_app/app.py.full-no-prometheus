@@ -1,98 +1,35 @@
-#app.py
 import os
 import sys
 import requests
 import logging
-import time
-from flask import Flask, render_template, jsonify, redirect, url_for, request, abort, Response
+from flask import Flask, render_template, jsonify, redirect, url_for, request, abort
 import mysql.connector
 from mysql.connector import Error
-from prometheus_client import Counter, Gauge, Histogram, Summary, start_http_server
-import psutil  # For accessing system details, including CPU usage
 from config import Config
 from managedb import initialize_database, reconfigure_database
-from apscheduler.schedulers.background import BackgroundScheduler
-
 
 # Initialize Flask app
 app = Flask(__name__)
 app.config.from_object(Config)
 
-# Start Prometheus metrics server on port 8000
-start_http_server(8000)
-
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger("RequestLogger")
-
-# Prometheus metrics
-# HTTP request counter
-request_count = Counter('http_req_total', 'HTTP Requests Total')
-
-# System memory and CPU usage gauges
-memory_usage = Gauge('memory_usage_bytes', 'System Memory Usage')
-cpu_usage = Gauge('cpu_usage_percent', 'System CPU Usage Percent')
-
-# Threading metrics
-thread_count = Gauge('system_thread_count', 'Number of system threads')
-context_switches = Gauge('system_context_switches_total', 'Total number of context switches')
-
-# HTTP request latency histogram and response size summary
-request_latency = Histogram('http_request_latency_seconds', 'HTTP request latency in seconds')
-response_size = Summary('http_response_size_bytes', 'HTTP response size in bytes')
-
-def update_system_metrics():
-    """Update system-related metrics, including memory and CPU usage."""
-    memory_usage.set(psutil.virtual_memory().used)
-    cpu_usage.set(psutil.cpu_percent())
-
-def update_threading_metrics():
-    """Update threading-related metrics."""
-    thread_count.set(psutil.Process().num_threads())
-    context_switches.set(psutil.cpu_stats().ctx_switches)
-
-# Initialize APScheduler
-scheduler = BackgroundScheduler(daemon=True)
-scheduler.add_job(update_system_metrics, 'interval', seconds=1860)
-scheduler.add_job(update_threading_metrics, 'interval', seconds=1860)
-
-# Start the scheduler
-scheduler.start()
-
-# Use atexit to ensure that the scheduler is cleanly shut down when the Flask app exits
-import atexit
-atexit.register(lambda: scheduler.shutdown())
-
-@app.before_request
-def before_request_func():
-    """Log request details, increment request counter, and start latency measurement."""
-    logger.info(f"Received {request.method} request to {request.path} from {request.remote_addr}")
-    request.start_time = time.time()
-    request_count.inc()
-
-@app.after_request
-def after_request_func(response):
-    """Log response details, measure and observe request latency and response size."""
-    latency = time.time() - request.start_time
-    request_latency.observe(latency)
-    response_size.observe(len(response.get_data(as_text=True)))
-    logger.info(f"Responded to {request.method} request to {request.path} with status {response.status_code}")
-    return response
-
 
 # Initialize the database with the app's config
 with app.app_context():
     initialize_database(app)
 
-@app.route('/metrics')
-def proxy_metrics():
-    # Make a request to the Prometheus metrics server
-    response = requests.get('http://localhost:8000/metrics')
+@app.before_request
+def log_request_info():
+    """Logs details of the request before it's processed."""
+    logger.info(f"Received {request.method} request to {request.path} from {request.remote_addr}")
 
-    # Return the response content and content type to the client
-    return Response(response.content, content_type=response.headers['Content-Type'])
-
-
+@app.after_request
+def log_response_info(response):
+    """Logs details of the response after request is processed."""
+    logger.info(f"Responded to {request.method} request to {request.path} with status {response.status}")
+    return response
 
 @app.route('/reload-config', methods=['POST'])
 def reload_config():
@@ -118,6 +55,7 @@ def get_db_connection():
 
 @app.route('/')
 def index():
+    """Renders the main page with quotes from the database."""
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute("SELECT quote, author FROM quotes")
@@ -128,10 +66,12 @@ def index():
 
 @app.route('/quotes')
 def redirect_to_api_quotes():
+    """Redirects /quotes URL to the quotes API endpoint."""
     return redirect(url_for('quotes_api'))
 
 @app.route('/api/quotes', endpoint='quotes_api')
 def quotes_api():
+    """Fetches a random quote from an external API and stores it in the database if it's not already present."""
     try:
         response = requests.get('https://api.quotable.io/random')
         data = response.json()
@@ -153,6 +93,7 @@ def quotes_api():
 
 @app.route('/api/quotes/duplicates')
 def show_duplicates():
+    """Shows duplicate quotes in the database."""
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute("""
@@ -168,6 +109,7 @@ def show_duplicates():
 
 @app.route('/api/quotes/duplicates/delete', methods=['POST'])
 def delete_duplicates():
+    """Deletes duplicate quotes from the database, keeping only the first occurrence."""
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute("""
@@ -182,5 +124,4 @@ def delete_duplicates():
     return jsonify({'message': f'Deleted {affected_rows} duplicate quotes'})
 
 if __name__ == "__main__":
-    # Start up the server to expose the metrics.
     app.run(debug=True, port=3000)

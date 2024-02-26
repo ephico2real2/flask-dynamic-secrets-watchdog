@@ -17,7 +17,8 @@ services:
   app:
     build: .
     ports:
-      - '13000:3000'
+      - '3000:3000'
+      - '8000:8000'
     environment:
       - FLASK_APP=app.py
       - FLASK_RUN_HOST=0.0.0.0

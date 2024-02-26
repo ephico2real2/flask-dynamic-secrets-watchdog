@@ -5,7 +5,7 @@ FROM python:3.11-slim
 WORKDIR /usr/src/app
 
 # Install system dependencies
-RUN apt-get update && apt-get install -y --no-install-recommends procps default-mysql-client \
+RUN apt-get update && apt-get install -y --no-install-recommends procps default-mysql-client curl lsof \
     gcc \
     && rm -rf /var/lib/apt/lists/*
 
@@ -17,7 +17,7 @@ RUN pip install --no-cache-dir -r requirements.txt && \
     chmod +x run-flask.sh
 
 # Make port 3000 available to the world outside this container
-EXPOSE 3000
+EXPOSE 3000 8000
 
 # Set environment variable for Flask and secrets directory
 ENV FLASK_APP=app.py

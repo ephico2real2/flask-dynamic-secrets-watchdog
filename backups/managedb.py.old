@@ -5,18 +5,14 @@ import time
 import mysql.connector
 from mysql.connector import Error
 
-def get_db_config(app):
-    """Retrieve database configuration from the Flask app's configuration."""
-    return {
+def initialize_database(app):
+    db_config = {
         'host': app.config['DATABASE_HOST'],
         'user': app.config['DATABASE_USER'],
         'password': app.config['DATABASE_PASSWORD'],
         'database': app.config['DATABASE_NAME'],
     }
 
-def initialize_database(app):
-    """Initialize the database with the necessary schema on application start."""
-    db_config = get_db_config(app)
     max_retries = 5
     wait_seconds = 10
     connected = False
@@ -24,6 +20,7 @@ def initialize_database(app):
     for attempt in range(max_retries):
         try:
             print(f"Attempting to connect to the database. Attempt {attempt + 1} of {max_retries}")
+            # Connect to MySQL server
             cnx = mysql.connector.connect(**db_config)
             cursor = cnx.cursor()
             print("Database connection successful.")
@@ -45,24 +42,10 @@ def initialize_database(app):
             
             cursor.close()
             cnx.close()
-            break  # Exit loop after successful execution
+            break  # Break the loop if connection and script execution are successful
         except Error as err:
             print(f"Connection attempt failed: {err}")
-            time.sleep(wait_seconds)
+            time.sleep(wait_seconds)  # Wait before retrying
 
     if not connected:
         print("Failed to connect to the database after several attempts.")
-        sys.exit(1)
-
-def reconfigure_database(app):
-    """Reconfigure the database connection dynamically when secrets change."""
-    print("Reconfiguring database connection with new settings...")
-    db_config = get_db_config(app)
-    
-    try:
-        cnx = mysql.connector.connect(**db_config)
-        print("Database reconfiguration successful. Connection established.")
-        cnx.close()
-    except Error as err:
-        print(f"Failed to reconfigure database: {err}")
-        # Consider whether to exit or take additional action here
