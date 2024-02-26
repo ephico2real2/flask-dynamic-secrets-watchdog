@@ -41,43 +41,43 @@ This Flask application demonstrates dynamic secret loading and automatic configu
 ## Component Interaction Diagram
 
 ```bash
-                                                        +----------------------+
-                                                        |      run-flask.sh    |
-                                                        +----------+-----------+
-                                                                    |
-                                                                    v
-                                                        +----------+-----------+
-                                    +-----------------+  Flask Application   +-----------------+
-                                    |                 +----------+-----------+                 |
-                                    |                            |                               |
-                                    |                            |                               |
-                                    v                            v                               v
-                        +--------------+-------+       +------------+------------+       +---------+---------+
-                        | secrets_loader.py   |       | flask_secrets_watchdog.py|       |   config.py        |
-                        +--------------+-------+       +------------+------------+       +---------+---------+
-                                    |                            |                               |
-                                    |                            |                               |
-                                    v                            v                               v
-                            +--------+--------+       +-----------+-----------+         +--------+--------+
-                            |   Secrets       |       |  Watch for changes in |         | Load secrets and |
-                            | Directory/File  |       |  secrets directory    |         | update app config|
-                            +-----------------+       +-----------+-----------+         +------------------+
-                                                                    |
-                                                                    |
-                                                                    v
-                                                        +-----------+-----------+
-                                                        |   on_secrets_changed() |
-                                                        |   function in Flask    |
-                                                        |   app triggers reload  |
-                                                        +-----------+-----------+
-                                                                    |
-                                                                    v
-                                                        +-----------+-----------+
-                                                        | Reload Flask app's    |
-                                                        | configuration and     |
-                                                        | re-establish database |
-                                                        | connection            |
-                                                        +-----------------------+
+                                    +----------------------+
+                                    |      run-flask.sh    |
+                                    +----------+-----------+
+                                                |
+                                                v
+                                    +----------+-----------+
+                +-----------------+  Flask Application   +-----------------+
+                |                 +----------+-----------+                 |
+                |                            |                               |
+                |                            |                               |
+                v                            v                               v
+    +--------------+-------+       +------------+------------+       +---------+---------+
+    | secrets_loader.py   |       | flask_secrets_watchdog.py|       |   config.py        |
+    +--------------+-------+       +------------+------------+       +---------+---------+
+                |                            |                               |
+                |                            |                               |
+                v                            v                               v
+        +--------+--------+       +-----------+-----------+         +--------+--------+
+        |   Secrets       |       |  Watch for changes in |         | Load secrets and |
+        | Directory/File  |       |  secrets directory    |         | update app config|
+        +-----------------+       +-----------+-----------+         +------------------+
+                                                |
+                                                |
+                                                v
+                                    +-----------+-----------+
+                                    |   on_secrets_changed() |
+                                    |   function in Flask    |
+                                    |   app triggers reload  |
+                                    +-----------+-----------+
+                                                |
+                                                v
+                                    +-----------+-----------+
+                                    | Reload Flask app's    |
+                                    | configuration and     |
+                                    | re-establish database |
+                                    | connection            |
+                                    +-----------------------+
 
 ```
 
