@@ -88,11 +88,11 @@
     <!-- Button to delete duplicates -->
     <!-- <button onclick="deleteDuplicates()">Delete Duplicates</button> -->
 
-    <!-- Delete Duplicates button with red color -->
-    <button id="deleteDuplicatesButton" onclick="deleteDuplicates()">Delete Duplicates</button>
-
     <!-- Delete ShowDuplicates button with yellow color -->
     <button id="showDuplicatesButton" onclick="showDuplicates()">Show Duplicates</button>
+
+    <!-- Delete Duplicates button with red color -->
+    <button id="deleteDuplicatesButton" onclick="deleteDuplicates()">Delete Duplicates</button>
 
     <!-- Refresh button with color blue -->
     <button id="refreshButton" onclick="refreshPage()">Refresh</button>   
@@ -118,21 +118,6 @@
             alert('Failed to fetch new quote. Please try again.');
         });
     }
-    
-    function deleteDuplicates() {
-        fetch('/api/quotes/duplicates/delete', {
-            method: 'POST',
-        })
-        .then(response => response.json())
-        .then(data => {
-            alert(data.message); // Display a simple alert with the response message
-            window.location.reload(); // Reload the page to update the list of quotes
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('An error occurred while deleting duplicates.'); // Display an error alert if something goes wrong
-        });
-    }
 
     function showDuplicates() {
         fetch('/api/quotes/duplicates')
@@ -153,6 +138,29 @@
             alert('An error occurred while fetching duplicates.'); // Display an error alert if something goes wrong
         });
     }
+
+    function deleteDuplicates() {
+    console.log("Sending request to delete duplicates");
+    fetch('/api/quotes/duplicates/delete', {
+        method: 'POST',
+    })
+    .then(response => {
+        if (response.ok) {
+            return response.json();
+        }
+        throw new Error('Network response was not ok.');
+    })
+    .then(data => {
+        console.log("Response received", data);
+        alert(data.message); // Display the alert message
+        console.log("Reloading the page");
+        window.location.href = window.location.href; // Reload the page
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred while deleting duplicates.');
+    });
+}
 
     function refreshPage() {
             window.location.reload(); // Refreshes the current page

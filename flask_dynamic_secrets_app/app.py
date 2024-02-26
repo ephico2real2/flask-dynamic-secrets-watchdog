@@ -129,8 +129,6 @@ def health_check():
 
     return jsonify(health_status), overall_status
 
-
-
 @app.route('/')
 def index():
     conn = get_db_connection()
@@ -194,7 +192,8 @@ def delete_duplicates():
     conn.commit()
     cursor.close()
     conn.close()
-    return jsonify({'message': f'Deleted {affected_rows} duplicate quotes'})
+    #return jsonify({'message': f'Deleted {affected_rows} duplicate quotes'})
+    return jsonify({'success': True, 'reload': True})
 
 if __name__ == "__main__":
     # Start up the server to expose the metrics.

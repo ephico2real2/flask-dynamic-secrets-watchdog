@@ -25,6 +25,12 @@ services:
       - FLASK_RUN_PORT=3000
       # Path inside the container where the secrets directory is mounted
       - SECRETS_DIRS=/usr/src/app/secrets
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
     volumes:
       - .:/usr/src/app
       # Mount the local secrets directory to the specified path inside the container
