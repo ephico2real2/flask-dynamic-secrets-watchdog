@@ -13,11 +13,10 @@ Creating a README for running the Flask app locally with Python virtual environm
 Clone the repository to your local machine and navigate into the project directory:
 
 ```bash
-git clone [REPOSITORY_URL] flask-dynamic-secrets-watchdog
-cd flask-dynamic-secrets-watchdog
+git clone https://github.com/ephico2real2/flask-dynamic-secrets-watchdog.git
+cd flask-dynamic-secrets-watchdog && ls -al
+cd ./flask_dynamic_secrets_app
 ```
-
-Replace `[REPOSITORY_URL]` with the actual URL of your git repository.
 
 #### Step 2: Create Python Virtual Environment
 

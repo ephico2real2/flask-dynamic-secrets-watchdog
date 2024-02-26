@@ -14,15 +14,15 @@ Ensure Docker and Docker Compose are installed on your system. You can verify th
 First, clone the repository to your local machine and navigate into the project directory:
 
 ```bash
-git clone [REPOSITORY_URL] flask-dynamic-secrets-watchdog
-cd flask-dynamic-secrets-watchdog
+git clone https://github.com/ephico2real2/flask-dynamic-secrets-watchdog.git
+cd flask-dynamic-secrets-watchdog && ls -al
+cd ./flask_dynamic_secrets_app
 ```
 
-Replace `[REPOSITORY_URL]` with the actual URL of your git repository.
 
 #### Step 2: Create Secrets
 
-Before starting the Docker containers, create a `./secrets` directory in the project root and populate it with your MySQL secrets. This directory will be mounted into the Docker container to configure the Flask app:
+Before starting the Docker containers, create a `./secrets` directory in the project root ("flask_dynamic_secrets_app" - folder) and populate it with your MySQL secrets. This directory will be mounted into the Docker container to configure the Flask app:
 
 ```bash
 mkdir -p ./secrets
