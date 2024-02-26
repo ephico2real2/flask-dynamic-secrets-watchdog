@@ -203,6 +203,19 @@ def delete_duplicate_quotes():
         "reload": True  # Instruct the client to reload the page
     })
 
+@app.route('/api/quotes/list')
+def list_quotes():
+    connection = get_db_connection()
+    cursor = connection.cursor()
+    cursor.execute("SELECT quote, author FROM quotes ORDER BY id ASC")
+    quotes = cursor.fetchall()
+    cursor.close()
+    connection.close()
+
+    # Format the quotes as a list of dicts to facilitate JSON serialization
+    quotes_list = [{'quote': quote, 'author': author} for quote, author in quotes]
+    return jsonify(quotes_list)
+
 if __name__ == "__main__":
     # Start up the server to expose the metrics.
     app.run(debug=True, port=3000)

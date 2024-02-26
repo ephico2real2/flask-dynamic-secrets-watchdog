@@ -139,22 +139,22 @@
         });
     }
 
-    function deleteDuplicates() {
+    window.onload = function() {
+    updateQuotesTable(); // Call this on page load to ensure table is always up to date.
+    // Scroll to the bottom of the page after it loads
+    window.scrollTo(0, document.body.scrollHeight);
+};
+
+function deleteDuplicates() {
     console.log("Sending request to delete duplicates");
     fetch('/api/quotes/duplicates/delete', {
         method: 'POST',
     })
-    .then(response => {
-        if (response.ok) {
-            return response.json();
-        }
-        throw new Error('Network response was not ok.');
-    })
+    .then(response => response.json())
     .then(data => {
         console.log("Response received", data);
         alert(data.message); // Display the alert message
-        console.log("Reloading the page");
-        window.location.href = window.location.href; // Reload the page
+        updateQuotesTable(); // Update the table without full page reload
     })
     .catch(error => {
         console.error('Error:', error);
@@ -162,9 +162,38 @@
     });
 }
 
-    function refreshPage() {
-            window.location.reload(); // Refreshes the current page
-        }
+function updateQuotesTable() {
+    fetch('/api/quotes/list') // This endpoint must exist and return the updated list of quotes
+        .then(response => response.json())
+        .then(data => {
+            const quotesTableBody = document.getElementById('quotesTableBody');
+            quotesTableBody.innerHTML = ''; // Clear the table body to populate it with updated data
+
+            data.forEach((quote, index) => {
+                const row = quotesTableBody.insertRow(-1);
+                const numberCell = row.insertCell(0);
+                const quoteCell = row.insertCell(1);
+                const authorCell = row.insertCell(2);
+
+                numberCell.textContent = index + 1;
+                quoteCell.textContent = quote.text;
+                authorCell.textContent = quote.author;
+            });
+
+            // Optionally, scroll to the bottom of the table or another specific element
+            window.scrollTo(0, document.body.scrollHeight);
+        })
+        .catch(error => console.error('Failed to update quotes table:', error));
+}
+
+// Function to refresh the page
+function refreshPage() {
+    console.log("Refreshing the page");
+    window.location.reload(); // Refreshes the current page
+}
+
+ 
+  
     </script>
 </body>
 </html>
