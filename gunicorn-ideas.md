@@ -83,13 +83,15 @@ In the provided script, if the database connection fails during the continuous m
 ### Detection of Database Connection Failure:
 
 - The monitorDatabase() function continuously attempts to connect to the MySQL database using the db_connector.py script.
-- If the connection attempt fails, the script logs an error message indicating the failure to connect to the MySQL database.
+  If the connection attempt fails, the script logs an error message indicating the failure to connect to the MySQL database.
 - Stopping Gunicorn Server:
-- Upon detecting a database connection failure, the script stops the Gunicorn server using pkill -f 'gunicorn app:app'.
+  Upon detecting a database connection failure, the script stops the Gunicorn server using pkill -f 'gunicorn app:app'.
 - Retrying Database Connection:
-- The script will continue attempting to reconnect to the database at regular intervals (every minute, as specified by sleep 60). Once the database connection is restored and successful (status -eq 0), the script will start the Gunicorn server again using the startGunicorn() function.
+  The script will continue attempting to reconnect to the database at regular intervals (every minute, as specified by sleep 60).
+  Once the database connection is restored and successful (status -eq 0), the script 
+  will start the Gunicorn server again using the startGunicorn() function.
 - Logging:
-Throughout this process, the script logs relevant messages to the debug file, providing visibility into the status of database connectivity and the actions taken by the script.
+  Throughout this process, the script logs relevant messages to the debug file, providing visibility into the status of database connectivity and the actions taken by the script.
 
 ```
 
