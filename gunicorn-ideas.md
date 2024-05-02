@@ -1,7 +1,5 @@
 ```bash
 
-
-```bash
 #!/bin/bash
 
 # Define global variables...
