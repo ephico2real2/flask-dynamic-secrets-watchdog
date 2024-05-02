@@ -20,14 +20,9 @@ monitorDatabase &
 monitorGunicorn
 wait
 
-
 ```
 
-
-
-
 `` HEALTH CHECKS ``
-
 
 ```
 Using the `pgrep` command in a Bash script to check if a process like Gunicorn is running is a straightforward and effective approach for a liveness probe. This method is commonly used in various system administration tasks to quickly assess whether essential services are active, making it a suitable choice for both manual checks and automated monitoring systems, such as Kubernetes liveness probes.
@@ -45,6 +40,7 @@ else
     echo "Process is not running."
     exit 1
 fi
+
 ```
 
 1. **Shebang**: `#!/bin/bash` - This line tells the operating system that this script should be run using Bash, which is the shell interpreter.
@@ -94,6 +90,9 @@ This script is simple yet effective for ensuring that critical components like G
 
 
 `` ####################### ``
+
+```
+
 ```bash
 
 #!/bin/bash
