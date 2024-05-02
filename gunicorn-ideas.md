@@ -31,6 +31,8 @@ Here's a detailed breakdown of how your script works and its implications:
 
 ### Script Explanation
 
+```
+
 ```bash
 #!/bin/bash
 if pgrep -f 'your_app_process_name' > /dev/null; then
@@ -43,6 +45,7 @@ fi
 
 ```
 
+```
 1. **Shebang**: `#!/bin/bash` - This line tells the operating system that this script should be run using Bash, which is the shell interpreter.
 
 2. **Process Check**: `pgrep -f 'your_app_process_name' > /dev/null` - This command uses `pgrep` to search for processes whose command line arguments match the pattern 'your_app_process_name'. The `-f` option is crucial because it makes `pgrep` look at the full command line, not just the command name.
