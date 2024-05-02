@@ -1,5 +1,7 @@
 ```bash
 
+
+```bash
 #!/bin/bash
 
 # Define global variables...
@@ -16,7 +18,14 @@ start() {
     # Log start message...
 }
 
-# Continuously monitor database connection in the background
+# Function to start Gunicorn
+startGunicorn() {
+    /bin/echo "Starting Gunicorn..." | /usr/bin/tee -a "${debugFile}"
+    cd /usr/local/insights-queue/ || exit
+    gunicorn app:app 2>&1 | /usr/bin/tee -a "${debugFile}" &
+}
+
+# Continuously monitor database connection
 monitorDatabase() {
     while true; do
         /bin/echo "Attempting to connect to MySQL..." | /usr/bin/tee -a "${debugFile}"
@@ -27,8 +36,7 @@ monitorDatabase() {
             /bin/echo "MySQL database connection successful." | /usr/bin/tee -a "${debugFile}"
         else
             /bin/echo "Failed to connect to MySQL database. Retrying in 1 minute..." | /usr/bin/tee -a "${debugFile}"
-            monitorGunicorn &
-            wait
+            pkill -f 'gunicorn app:app'
         fi
 
         sleep 60  # Sleep for a minute before next check
@@ -41,9 +49,7 @@ monitorGunicorn() {
         /bin/echo "Checking for existing gunicorn processes..." | /usr/bin/tee -a "${debugFile}"
         pgrep -f 'gunicorn app:app'
         if [ $? -ne 0 ]; then
-            /bin/echo "Gunicorn process not found. Starting new gunicorn process..." | /usr/bin/tee -a "${debugFile}"
-            cd /usr/local/insights-queue/ || exit
-            gunicorn app:app 2>&1 | /usr/bin/tee -a "${debugFile}" &
+            startGunicorn
         fi
 
         sleep 60  # Sleep for a minute before next check
@@ -54,14 +60,36 @@ monitorGunicorn() {
 setup
 start
 
-# Run the database monitoring function in the background
+# Run the monitoring functions in the background
 monitorDatabase &
+monitorGunicorn &
+```
 
-# Ensure the monitorGunicorn function is not running at the start
-pkill -f 'monitorGunicorn'
+In this updated script:
 
-# Wait for the database monitoring function to exit
-wait
+- The `monitorDatabase()` function continuously monitors the database connection.
+- The `monitorGunicorn()` function continuously monitors the Gunicorn server.
+- Both functions are started in the background (`&`) after the setup and start functions.
+- Gunicorn is started in the `startGunicorn()` function when the database connection is successful.
+- If the database connection fails, the Gunicorn server is stopped using `pkill`.
+
+With these modifications, both the database connection and the Gunicorn server will be continuously monitored in the background, ensuring that Gunicorn is running whenever the database is accessible.
+
+
+f the database connection starts failing after the application has been running successfully, the behavior will depend on how the script is configured to handle database connection failures.
+
+In the provided script, if the database connection fails during the continuous monitoring process:
+
+### Detection of Database Connection Failure:
+
+- The monitorDatabase() function continuously attempts to connect to the MySQL database using the db_connector.py script.
+- If the connection attempt fails, the script logs an error message indicating the failure to connect to the MySQL database.
+- Stopping Gunicorn Server:
+- Upon detecting a database connection failure, the script stops the Gunicorn server using pkill -f 'gunicorn app:app'.
+- Retrying Database Connection:
+- The script will continue attempting to reconnect to the database at regular intervals (every minute, as specified by sleep 60). Once the database connection is restored and successful (status -eq 0), the script will start the Gunicorn server again using the startGunicorn() function.
+- Logging:
+Throughout this process, the script logs relevant messages to the debug file, providing visibility into the status of database connectivity and the actions taken by the script.
 
 ```
 
