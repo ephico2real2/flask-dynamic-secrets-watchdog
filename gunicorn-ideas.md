@@ -1,3 +1,23 @@
+```
+
+## /bin/echo "$(date '+%Y-%m-%d %H:%M:%S') - Setting up..." | /usr/bin/tee -a "${debugFile}"
+
+trap "cleanup" EXIT
+
+cleanup() {
+    echo "Cleaning up..."
+    pkill -f monitorDatabase
+    pkill -f monitorGunicorn
+}
+
+monitorDatabase &
+monitorGunicorn
+wait
+
+```
+
+
+`` ####################### ``
 ```bash
 
 #!/bin/bash
