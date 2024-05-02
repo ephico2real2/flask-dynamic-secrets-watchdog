@@ -63,6 +63,7 @@ pkill -f 'monitorGunicorn'
 # Wait for the database monitoring function to exit
 wait
 
+```
 
 `` ##################### ``
 
