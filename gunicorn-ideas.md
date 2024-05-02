@@ -29,9 +29,10 @@ Using the `pgrep` command in a Bash script to check if a process like Gunicorn i
 
 Here's a detailed breakdown of how your script works and its implications:
 
+```
+
 ### Script Explanation
 
-```
 
 ```bash
 #!/bin/bash
@@ -62,6 +63,8 @@ fi
 You can use this script as part of a health check system in various environments:
 - **Direct Monitoring**: Run the script manually or set it up as a cron job to check the process status periodically.
 - **Container Orchestration Systems**: In Kubernetes, for example, you could set this script as a liveness probe to ensure your container is restarted if Gunicorn is not running:
+
+```
 
 ```yaml
 livenessProbe:
