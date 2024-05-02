@@ -1,3 +1,71 @@
+```bash
+
+#!/bin/bash
+
+# Define global variables...
+
+# Function definitions...
+
+# Main setup function
+setup() {
+    # Setup directories and files...
+}
+
+# Main start function
+start() {
+    # Log start message...
+}
+
+# Continuously monitor database connection in the background
+monitorDatabase() {
+    while true; do
+        /bin/echo "Attempting to connect to MySQL..." | /usr/bin/tee -a "${debugFile}"
+        python3 /usr/local/insights-queue/db_connector.py
+        local status=$?
+
+        if [ $status -eq 0 ]; then
+            /bin/echo "MySQL database connection successful." | /usr/bin/tee -a "${debugFile}"
+        else
+            /bin/echo "Failed to connect to MySQL database. Retrying in 1 minute..." | /usr/bin/tee -a "${debugFile}"
+            monitorGunicorn &
+            wait
+        fi
+
+        sleep 60  # Sleep for a minute before next check
+    done
+}
+
+# Continuously monitor Gunicorn server
+monitorGunicorn() {
+    while true; do
+        /bin/echo "Checking for existing gunicorn processes..." | /usr/bin/tee -a "${debugFile}"
+        pgrep -f 'gunicorn app:app'
+        if [ $? -ne 0 ]; then
+            /bin/echo "Gunicorn process not found. Starting new gunicorn process..." | /usr/bin/tee -a "${debugFile}"
+            cd /usr/local/insights-queue/ || exit
+            gunicorn app:app 2>&1 | /usr/bin/tee -a "${debugFile}" &
+        fi
+
+        sleep 60  # Sleep for a minute before next check
+    done
+}
+
+# Start the main setup and start functions
+setup
+start
+
+# Run the database monitoring function in the background
+monitorDatabase &
+
+# Ensure the monitorGunicorn function is not running at the start
+pkill -f 'monitorGunicorn'
+
+# Wait for the database monitoring function to exit
+wait
+
+
+`` ##################### ``
+
 ```python
 
 #db_connector.py
