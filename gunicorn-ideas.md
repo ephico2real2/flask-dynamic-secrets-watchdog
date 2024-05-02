@@ -55,7 +55,7 @@ if os.environ.get('SECRETS_DIRS'):
 
 ```
 
-
+`` run.sh Bash scripts start ``
 ```bash
 #!/bin/bash
 
