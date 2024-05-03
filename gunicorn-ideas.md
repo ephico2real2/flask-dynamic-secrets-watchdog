@@ -1,65 +1,73 @@
 ### troubleshooting
 
-If `pkill` is giving you trouble, switching to using `kill` to terminate processes can be a more controlled approach, especially when you know the specific process IDs (PIDs) of the processes you want to terminate. Here’s how you can integrate `kill` into your script:
-
-### Using `kill` with Explicit PIDs
-To use `kill` effectively, you'll need to track the PIDs of the processes you start in your script. Here’s a step-by-step approach to implementing this:
-
-#### 1. **Store PIDs of Background Processes**
-When you start a background process in Bash, you can capture its PID using the special variable `$!`, which holds the PID of the most recently executed background process. Store this PID in a variable or a file for later use.
-
-```bash
-startGunicorn() {
-    gunicorn app:app &  # Start Gunicorn in the background
-    echo $! > /tmp/gunicorn.pid  # Save the PID to a file
-}
-
-monitorDatabase() {
-    python3 /usr/local/insights-queue/db_connector.py &
-    echo $! > /tmp/database_monitor.pid  # Save the PID to a file
-}
-```
-
-#### 2. **Modify Cleanup Function to Use `kill`**
-Use the stored PIDs to terminate the processes in your cleanup function. If you stored the PIDs in files, you can read these files and use `kill` to terminate the processes.
-
 ```bash
 cleanup() {
     echo "Cleaning up..."
 
-    if [ -f /tmp/gunicorn.pid ]; then
-        kill $(cat /tmp/gunicorn.pid) || echo "Failed to kill Gunicorn"
-        rm /tmp/gunicorn.pid
+    # Adjusted to use $logsDir environment variable for PID file locations
+    if [ -f "$logsDir/gunicorn.pid" ]; then
+        kill $(cat "$logsDir/gunicorn.pid") || echo "Failed to kill Gunicorn"
+        rm "$logsDir/gunicorn.pid"
     fi
 
-    if [ -f /tmp/database_monitor.pid ]; then
-        kill $(cat /tmp/database_monitor.pid) || echo "Failed to kill database monitor"
-        rm /tmp/database_monitor.pid
+    if [ -f "$logsDir/database_monitor.pid" ]; then
+        kill $(cat "$logsDir/database_monitor.pid") || echo "Failed to kill database monitor"
+        rm "$logsDir/database_monitor.pid"
     fi
 
     echo "All background processes killed."
 }
+
 ```
 
-#### 3. **Set Up Trap to Call Cleanup**
-Ensure your script sets up a trap to call this cleanup function upon exiting or receiving interrupt signals.
+#!/bin/bash
 
-```bash
-trap cleanup EXIT SIGINT SIGTERM
-```
+# Define global variables
+debugFile="$logsDir/debug.log"  # Adjust debug log file to use logsDir
+gunicornPidFile="$logsDir/gunicorn.pid"  # File to store the PID of Gunicorn
+databasePidFile="$logsDir/database_monitor.pid"  # File to store the PID of database monitor
 
-#### 4. **Testing and Debugging**
-- **Test your script thoroughly** to ensure that the processes are being started and killed as expected. Look for any errors in the log output when trying to kill the processes.
-- **Debugging Tip**: You might want to add more verbose logging to your cleanup function to understand if the PIDs are being read correctly and if `kill` is executing as expected.
+# Function to start Gunicorn
+startGunicorn() {
+    /bin/echo "Starting Gunicorn..." | /usr/bin/tee -a "${debugFile}"
+    cd /usr/local/insights-queue/ || exit 1  # Exit with error if directory change fails
 
-### Considerations for Using `kill`
-- **Graceful Shutdown**: If you need to shut down services gracefully, consider using specific signals like `SIGTERM` (which `kill` sends by default) or `SIGQUIT`. You can specify the signal before the PID:
-  ```bash
-  kill -SIGTERM $(cat /tmp/gunicorn.pid)
-  ```
-- **Handling Missing PIDs**: Make sure your script handles cases where the PID files might not exist (if the processes never started correctly or if they already terminated for some reason).
+    # Start Gunicorn and redirect its output to the debug file
+    gunicorn app:app 2>&1 | /usr/bin/tee -a "${debugFile}" &
+    echo $! > "${gunicornPidFile}"  # Capture and store the PID of the Gunicorn process
 
-By following these steps, you should be able to use `kill` effectively to manage the lifecycle of processes in your Bash scripts. This method gives you fine-grained control over which processes are terminated and when, making your script more robust and reliable.
+    /bin/echo "Gunicorn started with PID $!" | /usr/bin/tee -a "${debugFile}"
+}
+
+# Function to continuously monitor database connection
+monitorDatabase() {
+    while true; do
+        /bin/echo "Attempting to connect to MySQL..." | /usr/bin/tee -a "${debugFile}"
+        python3 /usr/local/insights-queue/db_connector.py 2>&1 | /usr/bin/tee -a "${debugFile}" &
+        echo $! > "${databasePidFile}"  # Capture and store the PID of the database monitor process
+        local status=$?
+
+        if [ $status -eq 0 ]; then
+            /bin/echo "MySQL database connection successful." | /usr/bin/tee -a "${debugFile}"
+        else
+            /bin/echo "Failed to connect to MySQL database. Retrying in 1 minute..." | /usr/bin/tee -a "${debugFile}"
+            pkill -f 'gunicorn app:app'
+        fi
+
+        sleep 60  # Sleep for a minute before next check
+    done
+}
+
+# Set environment variable (make sure this is set or exported before this script runs)
+export logsDir="/usr/local/insights-queue/logs"
+
+# Ensure directory exists
+mkdir -p $logsDir
+
+# Start the main setup and start functions
+startGunicorn
+monitorDatabase &
+
 
 
 `` ######################### ``
