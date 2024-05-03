@@ -38,28 +38,27 @@ databasePidFile="$logsDir/database_monitor.pid"  # File to store the PID of data
 
 # Function to start Gunicorn
 startGunicorn() {
-    /bin/echo "Starting Gunicorn..." | /usr/bin/tee -a "${debugFile}"
+    echo "Starting Gunicorn..." | tee -a "${debugFile}"
     cd /usr/local/insights-queue/ || exit 1  # Exit with error if directory change fails
 
-    # Start Gunicorn and redirect its output to the debug file
-    gunicorn app:app 2>&1 | /usr/bin/tee -a "${debugFile}" &
-    echo $! > "${gunicornPidFile}"  # Capture and store the PID of the Gunicorn process
+    # Start Gunicorn in a subshell and capture its PID
+    (gunicorn app:app 2>&1 & echo $! > "${gunicornPidFile}") | tee -a "${debugFile}" &
 
-    /bin/echo "Gunicorn started with PID $!" | /usr/bin/tee -a "${debugFile}"
+    echo "Gunicorn started with PID $(cat $gunicornPidFile)" | tee -a "${debugFile}"
 }
+
 
 # Function to continuously monitor database connection
 monitorDatabase() {
     while true; do
-        /bin/echo "Attempting to connect to MySQL..." | /usr/bin/tee -a "${debugFile}"
-        python3 /usr/local/insights-queue/db_connector.py 2>&1 | /usr/bin/tee -a "${debugFile}" &
-        echo $! > "${databasePidFile}"  # Capture and store the PID of the database monitor process
+        echo "Attempting to connect to MySQL..." | tee -a "${debugFile}"
+        (python3 /usr/local/insights-queue/db_connector.py 2>&1 & echo $! > "${databasePidFile}") | tee -a "${debugFile}"
         local status=$?
 
         if [ $status -eq 0 ]; then
-            /bin/echo "MySQL database connection successful." | /usr/bin/tee -a "${debugFile}"
+            echo "MySQL database connection successful." | tee -a "${debugFile}"
         else
-            /bin/echo "Failed to connect to MySQL database. Retrying in 1 minute..." | /usr/bin/tee -a "${debugFile}"
+            echo "Failed to connect to MySQL database. Retrying in 1 minute..." | tee -a "${debugFile}"
             pkill -f 'gunicorn app:app'
         fi
 
@@ -67,28 +66,25 @@ monitorDatabase() {
     done
 }
 
-
-
 monitorGunicorn() {
     while true; do
-        /bin/echo "Checking for existing Gunicorn processes..." | /usr/bin/tee -a "${debugFile}"
-        
-        # Using pgrep directly in the if condition for clarity and efficiency
+        echo "Checking for existing Gunicorn processes..." | tee -a "${debugFile}"
         if ! pgrep -f 'gunicorn app:app' > /dev/null; then
-            /bin/echo "Gunicorn process not found, starting Gunicorn..." | /usr/bin/tee -a "${debugFile}"
-            startGunicorn
+            echo "Gunicorn process not found, starting Gunicorn..." | tee -a "${debugFile}"
+            (gunicorn app:app 2>&1 & echo $! > "${gunicornPidFile}") | tee -a "${debugFile}" &
             if ! pgrep -f 'gunicorn app:app' > /dev/null; then
-                /bin/echo "Failed to start Gunicorn." | /usr/bin/tee -a "${debugFile}"
+                echo "Failed to start Gunicorn." | tee -a "${debugFile}"
             else
-                /bin/echo "Gunicorn started successfully." | /usr/bin/tee -a "${debugFile}"
+                echo "Gunicorn started successfully with PID $(cat $gunicornPidFile)." | tee -a "${debugFile}"
             fi
         else
-            /bin/echo "Gunicorn is running." | /usr/bin/tee -a "${debugFile}"
+            echo "Gunicorn is running." | tee -a "${debugFile}"
         fi
 
         sleep 60  # Sleep for a minute before next check
     done
 }
+
 
 # Set environment variable (make sure this is set or exported before this script runs)
 export logsDir="/usr/local/insights-queue/logs"
