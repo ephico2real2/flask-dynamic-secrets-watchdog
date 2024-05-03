@@ -20,6 +20,7 @@ cleanup() {
 
 ```
 
+```
 #!/bin/bash
 
 # Define global variables
@@ -58,6 +59,29 @@ monitorDatabase() {
     done
 }
 
+
+
+monitorGunicorn() {
+    while true; do
+        /bin/echo "Checking for existing Gunicorn processes..." | /usr/bin/tee -a "${debugFile}"
+        
+        # Using pgrep directly in the if condition for clarity and efficiency
+        if ! pgrep -f 'gunicorn app:app' > /dev/null; then
+            /bin/echo "Gunicorn process not found, starting Gunicorn..." | /usr/bin/tee -a "${debugFile}"
+            startGunicorn
+            if ! pgrep -f 'gunicorn app:app' > /dev/null; then
+                /bin/echo "Failed to start Gunicorn." | /usr/bin/tee -a "${debugFile}"
+            else
+                /bin/echo "Gunicorn started successfully." | /usr/bin/tee -a "${debugFile}"
+            fi
+        else
+            /bin/echo "Gunicorn is running." | /usr/bin/tee -a "${debugFile}"
+        fi
+
+        sleep 60  # Sleep for a minute before next check
+    done
+}
+
 # Set environment variable (make sure this is set or exported before this script runs)
 export logsDir="/usr/local/insights-queue/logs"
 
@@ -65,10 +89,11 @@ export logsDir="/usr/local/insights-queue/logs"
 mkdir -p $logsDir
 
 # Start the main setup and start functions
-startGunicorn
 monitorDatabase &
+monitorGunicorn &
+wait
 
-
+```
 
 `` ######################### ``
 
