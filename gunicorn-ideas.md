@@ -20,7 +20,7 @@ cleanup() {
 
 ```
 
-```
+```bash
 #!/bin/bash
 
 # Define global variables
