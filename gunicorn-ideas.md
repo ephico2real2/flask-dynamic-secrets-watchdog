@@ -52,26 +52,31 @@ startGunicorn() {
 monitorDatabase() {
     while true; do
         echo "Attempting to connect to MySQL..." | tee -a "${debugFile}"
+        # Execute the Python database connection check in a subshell, capture PID, and pipe output to `tee`
         (python3 /usr/local/insights-queue/db_connector.py 2>&1 & echo $! > "${databasePidFile}") | tee -a "${debugFile}"
+        # Wait for the background process to finish to capture its status
+        wait $(cat "${databasePidFile}")
         local status=$?
 
         if [ $status -eq 0 ]; then
             echo "MySQL database connection successful." | tee -a "${debugFile}"
         else
-            echo "Failed to connect to MySQL database. Retrying in 1 minute..." | tee -a "${debugFile}"
-            pkill -f 'gunicorn app:app'
+            echo "Failed to connect to MySQL database. Invoking cleanup and monitoring Gunicorn..." | tee -a "${debugFile}"
+            cleanup  # Invoke cleanup to handle shutting down processes cleanly
+            # No need to restart Gunicorn here, monitorGunicorn will handle it
         fi
-
         sleep 60  # Sleep for a minute before next check
     done
 }
+
 
 monitorGunicorn() {
     while true; do
         echo "Checking for existing Gunicorn processes..." | tee -a "${debugFile}"
         if ! pgrep -f 'gunicorn app:app' > /dev/null; then
             echo "Gunicorn process not found, starting Gunicorn..." | tee -a "${debugFile}"
-            (gunicorn app:app 2>&1 & echo $! > "${gunicornPidFile}") | tee -a "${debugFile}" &
+            startGunicorn  # Call startGunicorn function to manage Gunicorn startup
+            # After attempting to start, check if Gunicorn is running
             if ! pgrep -f 'gunicorn app:app' > /dev/null; then
                 echo "Failed to start Gunicorn." | tee -a "${debugFile}"
             else
@@ -84,6 +89,7 @@ monitorGunicorn() {
         sleep 60  # Sleep for a minute before next check
     done
 }
+
 
 
 # Set environment variable (make sure this is set or exported before this script runs)
