@@ -52,9 +52,10 @@ startGunicorn() {
 monitorDatabase() {
     while true; do
         echo "Attempting to connect to MySQL..." | tee -a "${debugFile}"
-        # Execute the Python database connection check in a subshell, capture PID, and pipe output to `tee`
-        (python3 /usr/local/insights-queue/db_connector.py 2>&1 & echo $! > "${databasePidFile}") | tee -a "${debugFile}"
-        # Wait for the background process to finish to capture its status
+        # Start the Python database connection check without using a subshell for PID capture
+        python3 /usr/local/insights-queue/db_connector.py 2>&1 &
+        echo $! > "${databasePidFile}"
+        # Use the captured PID to wait for the process to finish
         wait $(cat "${databasePidFile}")
         local status=$?
 
@@ -63,11 +64,12 @@ monitorDatabase() {
         else
             echo "Failed to connect to MySQL database. Invoking cleanup and monitoring Gunicorn..." | tee -a "${debugFile}"
             cleanup  # Invoke cleanup to handle shutting down processes cleanly
-            # No need to restart Gunicorn here, monitorGunicorn will handle it
+            # Assume monitorGunicorn is already running and will handle Gunicorn restart
         fi
         sleep 60  # Sleep for a minute before next check
     done
 }
+
 
 
 monitorGunicorn() {
