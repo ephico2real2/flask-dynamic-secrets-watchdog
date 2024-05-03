@@ -1,6 +1,14 @@
 ### troubleshooting
 
 ```bash
+
+# Export logsDir if it needs to be known by other processes started by this script
+export logsDir="/usr/local/insights-queue/logs"
+
+# Ensure the directory exists
+mkdir -p $logsDir
+
+
 cleanup() {
     echo "Cleaning up..."
 
