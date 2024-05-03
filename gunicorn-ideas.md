@@ -1,7 +1,5 @@
 ### troubleshooting
 
-```bash
-
 If `pkill` is giving you trouble, switching to using `kill` to terminate processes can be a more controlled approach, especially when you know the specific process IDs (PIDs) of the processes you want to terminate. Here’s how you can integrate `kill` into your script:
 
 ### Using `kill` with Explicit PIDs
@@ -64,7 +62,7 @@ trap cleanup EXIT SIGINT SIGTERM
 By following these steps, you should be able to use `kill` effectively to manage the lifecycle of processes in your Bash scripts. This method gives you fine-grained control over which processes are terminated and when, making your script more robust and reliable.
 
 
-```
+`` ######################### ``
 
 ```
 
