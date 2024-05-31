@@ -104,3 +104,42 @@ Medium
 
 ---
 
+---
+
+### Epic Link:
+Enhanced Monitoring and Logging for Applications
+
+### Title:
+Secure Management and Deployment of Splunk HEC Token
+
+### Description:
+The task involves integrating the Splunk HTTP Event Collector (HEC) token and the associated Splunk index name into our Logging Operator's deployment. The primary focus is on securely storing these credentials in AWS Secrets Manager and updating the Helm chart’s values file to enable Splunk logging. IAM permissions are already configured and do not require updates. Once the changes are updated and merged into the Git repository, Argo CD, configured with ApplicationSets, will automatically detect and deploy the changes across the necessary environments.
+
+### Acceptance Criteria:
+1. **Credentials Storage**: Store the Splunk HEC token and index name securely in AWS Secrets Manager, utilizing existing IAM permissions.
+2. **Helm Chart Configuration**: Update the `values.yaml` file of the Helm chart to enable the Splunk output, ensuring that all necessary configurations are properly set.
+3. **Git Operations**: Commit and merge the updated `values.yaml` file into the main branch of the repository.
+4. **Automated Deployment**: Verify that once the changes are merged, Argo CD automatically picks up these changes and deploys them accordingly via the ApplicationSet.
+5. **Documentation**: Document the process and configurations used, including how to activate the Splunk output and the operational flow with Argo CD.
+
+### Task Breakdown:
+- [ ] Securely store the Splunk HEC token and index name in AWS Secrets Manager.
+- [ ] Update the `values.yaml` file to enable Splunk output, setting appropriate configurations.
+- [ ] Merge changes into the Git repository to trigger automated deployments.
+- [ ] Monitor the deployment process through Argo CD to ensure that the updates are applied successfully.
+- [ ] Document the entire procedure, including storage, configuration, and deployment steps.
+
+### Priority:
+High
+
+### Labels:
+- Kubernetes
+- Helm
+- Logging
+- Splunk
+- Security
+- AWS
+- ArgoCD
+
+---
+
