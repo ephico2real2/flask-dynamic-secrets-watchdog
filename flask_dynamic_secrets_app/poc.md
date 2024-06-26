@@ -202,3 +202,46 @@ CMD ["/app/run.sh"]
   - Starts the Flask application using `flask run` to bind to all interfaces (`0.0.0.0`) on port 5000.
 
 This setup ensures that your Flask application is started correctly using `flask run`, making it accessible on port 5000.
+
+
+
+Certainly! Here is the revised JIRA story without the sub-tasks and with the role specified as a DevOps Engineer:
+
+---
+
+**JIRA Story**
+
+**Issue Type**: `Story`
+
+**Summary**: `Containerize Flask Application with Git Integration and Dynamic SSH Key Handling`
+
+**Description**:
+
+As a DevOps Engineer, I want to containerize the Flask application with dynamic SSH key handling and repository cloning, so that the application can securely access private repositories during the build process.
+
+**Acceptance Criteria**:
+
+1. The Dockerfile should:
+   - Install necessary dependencies including `git` and `openssh-client`.
+   - Create required directories (`/root/.ssh` and `/opt/python/log`).
+   - Add GitHub to known hosts.
+   - Accept `SSH_KEY` and `REPO_URL` as build arguments.
+   - Use the `SSH_KEY` argument to create an SSH key file.
+   - Clone the specified repository using the `REPO_URL` argument, if provided.
+   - Set the working directory to `service_configurator_app`.
+   - Copy application files to the working directory.
+   - Install Python dependencies from `requirements.txt` in the working directory.
+   - Expose port 5000.
+   - Set `run.sh` as the entry point.
+
+2. The `run.sh` script should:
+   - Change the directory to the cloned repository.
+   - Start the Flask application using `flask run` to bind to all interfaces (`0.0.0.0`) on port 5000.
+
+**Tasks**:
+- [ ] Create a Dockerfile that meets the specified criteria.
+- [ ] Create a `run.sh` script that starts the Flask application.
+- [ ] Test the Dockerfile and `run.sh` script to ensure the application runs correctly.
+- [ ] Document the build and run process.
+
+---
