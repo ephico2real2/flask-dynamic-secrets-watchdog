@@ -1,3 +1,112 @@
+## Phase 1
+I apologize for the misunderstanding. I'll adjust the Dockerfile to correctly handle the `requirements.txt` in the `service_configurator_app` directory.
+
+### Updated Dockerfile
+
+```Dockerfile
+# Use an official Python runtime as a parent image
+FROM python:3.9-slim
+
+# Install required dependencies
+RUN apt-get update && \
+    apt-get install -y git openssh-client && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+# Create the .ssh directory and log directory
+RUN mkdir -p /root/.ssh && mkdir -p /opt/python/log
+
+# Add GitHub to known hosts to avoid SSH prompt
+RUN ssh-keyscan github.com >> /root/.ssh/known_hosts
+
+# Define build arguments
+ARG SSH_KEY
+ARG REPO_URL
+
+# Use the build arguments
+RUN if [ -n "$SSH_KEY" ]; then \
+        echo "$SSH_KEY" > /root/.ssh/id_rsa && \
+        chmod 600 /root/.ssh/id_rsa; \
+    fi
+
+RUN if [ -n "$REPO_URL" ]; then \
+        git clone $REPO_URL /service_configurator_app/private-repo; \
+    fi
+
+# Set the working directory
+WORKDIR /service_configurator_app
+
+# Copy the current directory contents into the container at /service_configurator_app
+COPY . /service_configurator_app
+
+# Install any needed packages specified in requirements.txt
+RUN if [ -f requirements.txt ]; then \
+        pip install --no-cache-dir -r requirements.txt; \
+    fi
+
+# Copy the run.sh script to the container
+COPY run.sh /service_configurator_app/run.sh
+RUN chmod +x /service_configurator_app/run.sh
+
+# Expose port 5000
+EXPOSE 5000
+
+# Run the run.sh script
+CMD ["/service_configurator_app/run.sh"]
+```
+
+### Updated `run.sh` Script
+
+```bash
+#!/bin/bash
+
+# Start the Flask application
+cd /service_configurator_app/private-repo
+flask run --host=0.0.0.0 --port=5000
+```
+
+### Build and Run the Docker Image
+
+1. **Build the Docker Image**: Pass the SSH key and the repository URL as build arguments.
+
+   ```bash
+   docker build --build-arg SSH_KEY="$(cat ~/.ssh/id_rsa)" --build-arg REPO_URL=git@github.com:your-private-repo.git -t python-flask-app .
+   ```
+
+2. **Run the Docker Container**:
+
+   ```bash
+   docker run -p 5000:5000 python-flask-app
+   ```
+
+### Explanation
+
+- **Dockerfile**:
+  - Installs necessary dependencies (`git`, `openssh-client`).
+  - Creates the `.ssh` directory and the log directory `/opt/python/log`.
+  - Adds GitHub to known hosts during the build process using `ssh-keyscan`.
+  - Accepts `SSH_KEY` and `REPO_URL` as build arguments.
+  - Uses these arguments to create the SSH key file and clone the private repository, if provided.
+  - Sets the working directory to `service_configurator_app`.
+  - Copies the application files and the `run.sh` script to the working directory.
+  - Installs Python dependencies specified in `requirements.txt` located in the working directory.
+  - Exposes port 5000 for the Flask application.
+  - Sets the `run.sh` script as the entry point.
+
+- **run.sh**:
+  - Changes the directory to the cloned repository.
+  - Starts the Flask application using `flask run` to bind to all interfaces (`0.0.0.0`) on port 5000.
+
+This setup ensures that the necessary directories are created, and the application is set up correctly with the specified working directory and log directory.
+
+###########
+
+
+
+
+
+
+
 Got it. Here’s the updated `run.sh` script to use `flask run`:
 
 ### New `run.sh` Script
